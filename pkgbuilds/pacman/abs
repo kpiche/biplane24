@@ -1,0 +1,50 @@
+#!/bin/bash
+
+[ -f /etc/abs/abs.conf ] && source /etc/abs/abs.conf
+
+usage() {
+	echo "Arch Build System -- synchronization utility"
+	echo "usage: $0 [repository1 [repository2 ...]]"
+	echo
+	echo "abs will synchronize PKGBUILD scripts from the CVS repository"
+	echo "into $ABSROOT.  You can follow different package trees by"
+	echo "editing /etc/abs/supfile.* files.  If no argument is given, abs "
+	echo "will synchronize from supfiles specified in /etc/abs/abs.conf"
+}
+
+update() {
+	cd $ABSROOT
+	for sup in "${SUPFILES[@]}"; do
+		if [ "$sup" = "${sup#!}" ]; then
+			cvsup -L 1 -r 0 -g -b $ABSROOT -c .sup /etc/abs/supfile.$sup
+		fi
+	done		
+}
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+	usage
+	exit 0
+fi
+
+if [ ! -w $ABSROOT ]; then
+	echo "abs: no write permissions in $ABSROOT"
+	exit 1
+fi
+
+if [ ! `type -p cvsup` ]; then
+	echo "abs: cvsup was not found in PATH.  Install cvsup"
+	exit 1
+fi
+
+if [ ! -d "$ABSROOT" ]; then
+	echo "abs: directory $ABSROOT does not exist"
+	exit 1
+fi
+
+if [ "$#" -ne "0" ]; then
+	SUPFILES=("$@")
+fi
+
+update
+
+exit 0

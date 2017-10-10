@@ -1,0 +1,12 @@
+--- mutt.h.orig	2005-01-22 22:01:41.000000000 -0500
++++ mutt.h	2005-01-22 22:02:08.000000000 -0500
+@@ -38,6 +38,9 @@
+ #if defined(HAVE_WCTYPE_H) && defined(HAVE_WC_FUNCS)
+ # include <wctype.h>
+ #endif
++#if defined(__UCLIBC__)
++# include <stddef.h>
++#endif
+ 
+ #ifndef _POSIX_PATH_MAX
+ #include <posix1_lim.h>

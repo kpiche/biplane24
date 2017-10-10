@@ -1,0 +1,30 @@
+# $Id: PKGBUILD,v 1.3 2005/03/09 10:02:42 root Exp $
+# Contributor: K. Piche <kpiche@rogers.com>
+pkgname=uclibc
+# Note: 0.9.26 has known problems.
+pkgver=0.9.27
+#pkgdate=20041220
+#pkgver=0.9.27.$pkgdate
+pkgrel=1
+kernver=2.4.29
+pkgdesc="uClibc"
+url=(http://www.uclibc.org/)
+groups=('minimal')
+#source=(http://www.uclibc.org/downloads/snapshots/uClibc-$pkgdate.tar.bz2
+source=(http://www.uclibc.org/downloads/uClibc-$pkgver.tar.bz2
+uclibc.config)
+#source=(uclibc.config)
+#ftp://ftp.kernel.org/pub/linux/kernel/v2.4/linux-$kernver.tar.bz2)
+
+build() {
+  cd $startdir/src/uClibc-$pkgver
+#  cd $startdir/src/uClibc
+  #sed -e "s^@KERNSRC@^$startdir/src/linux-$kernver^" \
+  sed -e "s^@KERNSRC@^/usr/src/linux-$kernver^" \
+    ../uclibc.config >.config
+  make oldconfig
+  make || return 1
+  make PREFIX=$startdir/pkg install
+  make PREFIX=$startdir/pkg install_utils
+}
+md5sums=('6250bd6524283bd8e7bc976d43a46ec0' '51d78e4955c3edbb6ffd4fd99f3e4fb1')

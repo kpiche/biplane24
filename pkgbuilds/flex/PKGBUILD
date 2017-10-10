@@ -1,0 +1,30 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:22:31 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=flex
+pkgname=flex.uc
+pkgver=2.5.31
+pkgrel=2
+pkgdesc="A tool for generating text-scanning programs"
+url="http://lex.sourceforge.net"
+groups=('devel')
+makedepends=('m4.uc')
+depends=('uclibc' 'bash.uc')
+source=(http://dl.sourceforge.net/sourceforge/lex/flex-$pkgver.tar.bz2 
+        flex-yytext.patch)
+md5sums=('363dcc4afc917dc51306eb9d3de0152f' '3aeab6871ea9fed8ed45db5692e390ca')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  patch -Np1 -i ../flex-yytext.patch
+  ./configure --prefix=/usr
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+  cat > $startdir/pkg/usr/bin/lex << "EOF"
+#!/bin/sh
+# Begin /usr/bin/lex
+
+exec /usr/bin/flex -l "$@"
+# End /usr/bin/lex
+EOF
+  chmod 755 $startdir/pkg/usr/bin/lex
+}

@@ -1,0 +1,29 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:37:58 root Exp $
+# Maintainer: dorphell <dorphell@archlinux.org>
+pkg=libpcap
+pkgname=libpcap.uc
+pkgver=0.8.3
+pkgrel=1
+pkgdesc="A system-independent interface for user-level packet capture"
+depends=('uclibc')
+groups=('network')
+source=(http://www.tcpdump.org/release/libpcap-$pkgver.tar.gz)
+md5sums=('56a9d4615d8354fcfe8cff8c8443c77b')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  #  Busybox sed doesn't handle the [ char too well...
+  sed -e 's@pcap_version_string\[@pcap_version_string\\\[@' \
+      -e 's@pcap_version\[@pcap_version\\\[@' -i Makefile.in
+  ./configure --prefix=/usr
+  make || return 1
+  gcc -Wl,-soname,libpcap.so.0 -shared -fPIC -o libpcap.so.0.6 *.o
+  make prefix=$startdir/pkg/usr install
+  install -m755 libpcap.so.0.6 $startdir/pkg/usr/lib/libpcap.so.0.6
+  ln -sf libpcap.so.0.6 $startdir/pkg/usr/lib/libpcap.so
+  ln -sf libpcap.so.0.6 $startdir/pkg/usr/lib/libpcap.so.0
+  # backwards compatibility, programs often look for net/bpf.h
+  mkdir -p $startdir/pkg/usr/include/net
+  cd $startdir/pkg/usr/include/net
+  ln -s ../pcap-bpf.h bpf.h
+}

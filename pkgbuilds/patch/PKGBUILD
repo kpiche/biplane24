@@ -1,0 +1,19 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:22:31 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=patch
+pkgname=patch.uc
+pkgver=2.5.4
+pkgrel=2
+pkgdesc="A utility to apply patch files to original sources"
+url="http://www.gnu.org/software/patch/patch.html"
+groups=('devel')
+depends=('uclibc')	# ed not really required.
+source=(ftp://ftp.gnu.org/gnu/$pkg/$pkg-$pkgver.tar.gz)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+}
+md5sums=('ee5ae84d115f051d87fcaaef3b4ae782')

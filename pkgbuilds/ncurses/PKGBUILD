@@ -1,0 +1,38 @@
+# $Id: PKGBUILD,v 1.4 2005/03/18 04:09:45 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=ncurses
+pkgname=ncurses.uc
+pkgver=5.4
+pkgrel=2
+pkgdesc="A System V Release 4.0 curses emulation library"
+url="http://www.gnu.org/software/ncurses/ncurses.html"
+groups=('base')
+makedepends=('coreutils.uc')
+depends=('uclibc')
+source=(ftp://ftp.gnu.org/pub/gnu/$pkg/$pkg-$pkgver.tar.gz)
+md5sums=('069c8880072060373290a4fefff43520')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr \
+     --with-shared --with-normal --without-debug --without-ada \
+     --with-install-prefix=$startdir/pkg --without-cxx-binding
+  make || return 1
+  make install
+  mkdir -p $startdir/pkg/lib
+  cd $startdir/pkg/usr/lib
+  mv libncurses.so.$pkgver ../../lib
+  ln -sf ../../lib/libncurses.so.$pkgver libncurses.so.$pkgver
+  cd $startdir/pkg/lib
+  ln -sf libncurses.so.$pkgver libncurses.so.5
+  rm -f $startdir/pkg/lib/libcurses.so
+
+  # build unicode support libs
+  #cd $startdir/src/$pkg-$pkgver
+  #make clean
+  #./configure --prefix=/usr \
+  #   --with-shared --with-normal --without-debug --without-ada \
+  #   --with-install-prefix=$startdir/pkg --without-cxx-binding --enable-widec
+  #make || return 1
+  #make install
+}

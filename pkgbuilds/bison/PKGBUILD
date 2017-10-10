@@ -1,0 +1,20 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:22:31 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=bison
+pkgname=bison.uc
+pkgver=2.0
+pkgrel=1
+pkgdesc="The GNU general-purpose parser generator"
+url="http://www.gnu.org/software/bison/bison.html"
+groups=('devel')
+depends=('uclibc')
+makedepends=('m4.uc')
+source=(ftp://ftp.gnu.org/gnu/$pkg/$pkg-$pkgver.tar.gz)
+md5sums=('c17f964fd5504b88b07a183420de25e3')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --datadir=/usr/share
+  make || return 1
+  make DESTDIR=$startdir/pkg install
+}

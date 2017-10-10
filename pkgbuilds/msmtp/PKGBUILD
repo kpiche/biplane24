@@ -1,0 +1,19 @@
+# $Id: PKGBUILD,v 1.3 2005/03/20 07:22:50 root Exp $
+# Maintainer: kpiche <kpiche@rogers.com>
+pkg=msmtp
+pkgname=msmtp.uc
+pkgver=1.3.9
+pkgrel=1
+pkgdesc="msmtp is an SMTP client that can be used with mutt and other MUAs."
+url="http://msmtp.sourceforge.net/"
+groups=('network')
+depends=('uclibc')
+source=(http://voxel.dl.sourceforge.net/sourceforge/msmtp/$pkg-$pkgver.tar.bz2)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --sysconfdir=/etc
+  make || return 1
+  make DESTDIR=$startdir/pkg install
+}
+md5sums=('8e941785730c1ea1ee7fc9a65da41339')

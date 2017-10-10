@@ -1,0 +1,27 @@
+#
+# /etc/inittab
+#
+
+# This is run first except when booting in single-user mode.
+#
+::sysinit:/etc/rc.sysinit
+::wait:/etc/rc.multi
+
+# /bin/sh invocations on selected ttys
+#
+# Start an "askfirst" shell on the console (whatever that may be)
+vc/1::askfirst:-/bin/bash
+
+# Start an "askfirst" shell on /dev/tty2-4
+vc/2::askfirst:-/bin/bash
+vc/3::askfirst:-/bin/bash
+vc/4::askfirst:-/bin/ash
+
+# Stuff to do when restarting the init process
+::restart:/sbin/init
+
+# Stuff to do before rebooting
+::ctrlaltdel:/sbin/reboot
+::shutdown:/etc/rc.shutdown
+
+# End of file

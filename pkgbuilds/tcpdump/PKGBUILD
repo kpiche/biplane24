@@ -1,0 +1,23 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:37:58 root Exp $
+# Maintainer: dorphell <dorphell@archlinux.org>
+pkg=tcpdump
+pkgname=tcpdump.uc
+pkgver=3.8.3
+pkgrel=2
+pkgdesc="A tool for network monitoring and data acquisition"
+groups=('network')
+depends=('libpcap.uc')
+source=(http://www.tcpdump.org/release/$pkg-$pkgver.tar.gz)
+url="http://www.tcpdump.org/"
+md5sums=('30645001f4b97019677cad88d3811904')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  #  Busybox sed doesn't handle the [ char too well...
+  sed -e 's@version\[@version\\\[@' -i Makefile.in
+  ./configure --prefix=/usr
+  # libpcap's pcap_debug() function is AWOL
+  sed -i 's|^.*HAVE_PCAP_DEBUG.*$||' config.h
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+}

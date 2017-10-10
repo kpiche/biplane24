@@ -1,0 +1,27 @@
+# $Id: PKGBUILD,v 1.2 2005/04/05 01:40:26 root Exp $
+# Maintainer: Judd Vinet <jvinet@zeroflux.org>
+pkg=rsync
+pkgname=rsync.uc
+pkgver=2.6.4
+pkgrel=1
+pkgdesc="A file transfer program to keep remote files in sync"
+url="http://samba.anu.edu.au/rsync/"
+groups=('network')
+backup=(etc/rsyncd.conf)
+depends=('uclibc')
+source=(http://rsync.samba.org/ftp/rsync/$pkg-$pkgver.tar.gz \
+        rsyncd.conf rsyncd rsync.xinetd)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --with-included-popt
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+  # UCLIBC: no -D
+  mkdir -p $startdir/pkg/etc/{rc.d,xinetd.d}
+  install -m 755 ../rsyncd $startdir/pkg/etc/rc.d/rsyncd
+  install -m 644 ../rsyncd.conf $startdir/pkg/etc/rsyncd.conf
+  install -m 644 ../rsync.xinetd $startdir/pkg/etc/xinetd.d/rsync
+}
+md5sums=('a26c454a36148e0e873bedf3c0cc955d' '4395c0591638349b1a7aeaaa4da1f03a'\
+         '8e22dbda347b3de3fec9139a1c7e6e72' 'ea3e9277dc908bc51f9eddc0f6b935c1')

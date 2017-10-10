@@ -1,0 +1,30 @@
+# $Id: PKGBUILD,v 1.2 2005/03/08 08:52:42 root Exp $
+# Contributor: K. Piche <kpiche@rogers.com>
+pkg=busybox
+pkgname=busybox.uc
+pkgver=1.00
+pkgrel=1
+pkgdesc="Busybox"
+url=(http://busybox.net/)
+groups=('minimal')
+source=(http://busybox.net/downloads/$pkg-$pkgver.tar.bz2
+bbox.config syslogd klogd)
+depends=('uclibc')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  cp ../bbox.config .config
+  make oldconfig
+  make dep
+  make || return 1
+  make PREFIX=$startdir/pkg install
+
+  # busybox will include syslogd and klogd.
+  mkdir -p $startdir/pkg/etc/rc.d
+  install -m755 ../syslogd $startdir/pkg/etc/rc.d/syslogd
+  install -m755 ../klogd $startdir/pkg/etc/rc.d/klogd
+  # conflicts with bash.
+  rm $startdir/pkg/bin/sh
+}
+md5sums=('5c7ea9b5d3b3677dfcdcec38b281a756' 'b8fa259a9c9b383491ce9b867f7994f1'\
+         '5d08f910b5d654074e46568fcd7694a4' 'e06bd420c937287bfc605f6cdd4d82ea')

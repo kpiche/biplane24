@@ -1,0 +1,66 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:12:15 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=module-init-tools
+pkgname=module-init-tools.uc
+pkgver=3.1
+pkgver24=2.4.27
+pkgrel=2
+pkgdesc="Utilities for inserting and removing modules from the Linux kernel"
+url="http://www.kernel.org"
+groups=('base')
+makedepends=('bison.uc' 'flex.uc')
+depends=('uclibc')
+conflicts=('modutils')
+replaces=('modutils')
+backup=('etc/modprobe.conf' 'etc/modules.conf' 'etc/modprobe.devfs')
+source=(http://www.kernel.org/pub/linux/utils/kernel/module-init-tools/module-init-tools-$pkgver.tar.bz2 \
+  http://www.kernel.org/pub/linux/utils/kernel/modutils/v2.4/modutils-${pkgver24}.tar.bz2 makefile.patch \
+  modprobe.conf)
+md5sums=('8ddecbcf0e56aef8617f67a3906faf3e' 'bac989c74ed10f3bf86177fc5b4b89b6'\
+         '47e14fda7a46668290d11d0444d81826' '52b46ce871db3e028936814cb1f6231a')
+
+# NOTE: This package actually contains both the modutils and the
+#       module-init-tools utilities.  The old (modutils) utilities have
+#       .old extensions.
+
+build() {
+  cd $startdir/src/modutils-${pkgver24}
+  # UCLIBC: genksyms won't build, sort of flex problem.
+  sed -e '/^SUBDIR =/ s/genksyms//' -i src/modutils-2.4.27/Makefile.in
+  ./configure --prefix=/usr --enable-insmod-static
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+  mv $startdir/pkg/usr/sbin $startdir/pkg
+  mkdir -p $startdir/pkg/etc
+  for i in depmod modinfo insmod; do
+    mv $startdir/pkg/usr/man/man8/$i.8 $startdir/pkg/usr/man/man8/$i.old.8
+    mv $startdir/pkg/sbin/$i $startdir/pkg/sbin/$i.old
+  done
+  for i in kallsyms ksyms lsmod modprobe rmmod; do
+    mv $startdir/pkg/usr/man/man8/$i.8 $startdir/pkg/usr/man/man8/$i.old.8
+    rm -f $startdir/pkg/sbin/$i
+    ln -sf insmod.old $startdir/pkg/sbin/$i.old
+  done
+  mv $startdir/pkg/sbin/insmod.static $startdir/pkg/sbin/insmod.static.old
+  rm -f $startdir/pkg/sbin/{kallsyms,ksyms,lsmod,modprobe,rmmod}.static
+  mkdir -p $startdir/pkg/bin
+  ln -sf /sbin/insmod.old $startdir/pkg/bin/lsmod.old
+  rm -f $startdir/pkg/sbin/lsmod.old
+
+  cd $startdir/src/$pkg-$pkgver
+  patch -Np1 -i ../makefile.patch || return 1
+  sed -i 's|/usr/bin/install|/bin/install|g' install-with-care
+  ./configure --prefix=/usr --exec-prefix=/
+  make || return 1
+  INSTALL=/bin/install make DESTDIR=$startdir/pkg install
+  # UCLIBC: no -D
+  install -m644 modprobe.devfs $startdir/pkg/etc/modprobe.devfs
+  install -m644 ../modprobe.conf $startdir/pkg/etc/modprobe.conf
+
+  cat >$startdir/pkg/etc/modules.conf <<_EOF
+#
+# /etc/modules.conf (for v2.4 kernels)
+#
+
+_EOF
+}

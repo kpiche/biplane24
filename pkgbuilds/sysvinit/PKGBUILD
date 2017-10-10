@@ -1,0 +1,20 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:16:50 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=sysvinit
+pkgname=sysvinit.uc
+pkgver=2.86
+pkgrel=1
+pkgdesc="Linux System V Init"
+groups=('minimal')
+depends=('uclibc')
+source=(ftp://ftp.cistron.nl/pub/people/miquels/$pkg/$pkg-$pkgver.tar.gz)
+md5sums=('7d5d61c026122ab791ac04c8a84db967')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver/src
+  mkdir -p $startdir/pkg/sbin
+  mkdir -p $startdir/pkg/usr/man/man8
+  make CC='gcc -march=i386' killall5
+  install -m700 killall5 $startdir/pkg/sbin
+  install -m 644 ../man/killall5.8 $startdir/pkg/usr/man/man8
+}

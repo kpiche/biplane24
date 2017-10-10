@@ -1,0 +1,27 @@
+# $Id: PKGBUILD,v 1.2 2005/03/09 09:57:28 root Exp $
+# Maintainer: dorphell <dorphell@archlinux.org>
+pkg=mutt
+pkgname=mutt.uc
+pkgver=1.4.2.1
+pkgrel=1
+pkgdesc="A small but very powerful text-based mail client"
+url="http://www.mutt.org/"
+groups=('network')
+depends=('ncurses.uc')
+#makedepends=('gnupg')
+source=(ftp://ftp.mutt.org/mutt/$pkg-${pkgver}i.tar.gz mutt.patch)
+url="http://www.mutt.org/"
+md5sums=('710bd56d3c4c4bcd1403bc4e053f7476')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --sysconfdir=/etc \
+    --enable-pop --enable-imap --disable-nls --disable-iconv
+  # --without-wc-funcs
+  # --with-ssl --enable-pgp
+  patch -Np0 -i ../mutt.patch
+  make || return 1
+  make DESTDIR=$startdir/pkg install
+  rm -f $startdir/pkg/usr/bin/{flea,muttbug}
+  rm -f $startdir/pkg/usr/man/man1/{flea,muttbug}.1.gz
+}

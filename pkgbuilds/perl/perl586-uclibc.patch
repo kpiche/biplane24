@@ -1,0 +1,14 @@
+--- perlio.c.orig	2005-01-25 18:10:05.000000000 -0500
++++ perlio.c	2005-01-25 18:11:15.000000000 -0500
+@@ -2834,7 +2834,11 @@
+     /* There may be a better way for GLIBC:
+     	- libio.h defines a flag to not close() on cleanup
+      */	
++#    if defined(__UCLIBC__)
++    f->__filedes = -1;
++#    else
+     f->_fileno = -1;
++#     endif
+     return 1;
+ #  elif defined(__sun__)
+ #    if defined(_LP64)

@@ -1,0 +1,33 @@
+# $Id: PKGBUILD,v 1.2 2005/03/08 08:59:22 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=initscripts
+pkgname=initscripts.uc
+pkgver=0.7
+pkgrel=8
+pkgdesc="System initialization/bootup scripts"
+groups=('minimal')
+backup=(etc/inittab etc/rc.conf etc/rc.local)
+depends=('bash.uc' 'busybox.uc' 'mawk.uc' 'sysvinit.uc')
+source=(functions inittab rc.conf rc.local rc.multi rc.shutdown \
+        rc.single rc.sysinit network minilogd.c netfs)
+
+build() {
+  mkdir -p $startdir/pkg/etc/{rc.d,conf.d}
+  install -m644 functions $startdir/pkg/etc/rc.d/functions
+  install -m644 inittab $startdir/pkg/etc/inittab
+  install -m644 rc.conf $startdir/pkg/etc/rc.conf
+  for i in rc.local rc.multi rc.shutdown rc.single rc.sysinit; do
+    install -m755 $i $startdir/pkg/etc/$i
+  done
+  install -m755 network $startdir/pkg/etc/rc.d/network
+  install -m755 netfs $startdir/pkg/etc/rc.d/netfs
+  gcc -o minilogd minilogd.c || return 1
+  mkdir -p $startdir/pkg/sbin
+  install -m755 minilogd $startdir/pkg/sbin/minilogd
+}
+md5sums=('a54daa1c9ded63b9e95b4a3b8676987b' '4369f202f5814ed659f9bf2f87b01c95'\
+         'a069cec02b7eb8dd13037c8c0e019b70' '10d015f35686314cd37f24683dfd1f79'\
+         '2660d8f21bf06737d3a3d6fea973cedf' 'cd5e040d7fa20e8fa0f912307c5e730e'\
+         'ba812d0f25bb373530104c33fc3f8a4b' 'f28e2658b8d96a900c1ef24500815cda'\
+         '2b57128968c6cdb56109cd5f5dfdf2f0' '25056103268254a561065604bd432313'\
+         'ae84a7da3136c1bb32c6b7631425e91f')

@@ -1,0 +1,88 @@
+--- scripts/makepkg.orig	2004-12-15 07:20:35.000000000 -0500
++++ scripts/makepkg	2004-12-15 07:25:51.000000000 -0500
+@@ -443,8 +443,8 @@
+ 			for netfile in ${source[@]}; do
+ 				file=`strip_url $netfile`
+ 				echo -n "    $file ... " >&2
+-				echo "${md5sums[$idx]}  $file" | md5sum -c - >/dev/null 2>&1
+-				if [ $? -ne 0 ]; then
++				dig=`md5sum $file |cut -c 1-32`
++				if [ "$dig" != "${md5sums[$idx]}" ]; then
+ 					echo "FAILED" >&2
+ 					errors=1
+ 				else
+@@ -467,9 +467,9 @@
+ 			unset cmd
+ 			case $file in
+ 				*.tar.gz|*.tar.Z|*.tgz)
+-				cmd="tar --use-compress-program=gzip -xf $file" ;;
++				cmd="tar -xzf $file" ;;
+ 				*.tar.bz2)
+-				cmd="tar --use-compress-program=bzip2 -xf $file" ;;
++				cmd="tar -xjf $file" ;;
+ 				*.tar)
+ 				cmd="tar -xf $file" ;;
+ 				*.zip)
+@@ -595,13 +595,22 @@
+ # strip binaries
+ if [ "$NOSTRIP" = "0" ]; then
+ 	msg "Stripping debugging symbols from libraries..."
+-	find pkg/{,usr,usr/local,opt/*}/lib -type f -not -name "*.dll" -not -name "*.exe" \
+-		-exec /usr/bin/strip --strip-debug '{}' \; 2>&1 \
+-		| grep -v "No such file" | grep -v "format not recognized"
++	find pkg/{,usr,usr/local,opt/*}/lib -type f 2>/dev/null | while read i; do
++		ext="${i##*.}"
++		if [ "$ext" != "dll" -a "$ext" != "exe" ]; then
++			/usr/bin/strip --strip-debug $i 2>&1 | \
++				grep -v "No such file" | grep -v "format not recognized"
++		fi
++	done
++	
+ 	msg "Stripping symbols from binaries..."
+-	find pkg/{,usr,usr/local,opt/*}/{bin,sbin} -type f -not -name "*.dll" -not -name "*.exe" \
+-		-exec /usr/bin/strip '{}' \; 2>&1 \
+-		| grep -v "No such file" | grep -v "format not recognized"
++	find pkg/{,usr,usr/local,opt/*}/{bin,sbin} -type f 2>/dev/null | while read i; do
++		ext="${i##*.}"
++		if [ "$ext" != "dll" -a "$ext" != "exe" ]; then
++			/usr/bin/strip $i 2>&1 | \
++				grep -v "No such file" | grep -v "format not recognized"
++		fi
++	done
+ fi
+ 
+ # get some package meta info
+@@ -611,7 +620,7 @@
+ else
+ 	packager="Arch Linux (http://www.archlinux.org)"
+ fi
+-size=`du -cb $startdir/pkg | tail -n 1 | awk '{print $1}'`
++size=`du -c $startdir/pkg | tail -n 1 | awk '{print $1"K"}'`
+ 
+ # write the .PKGINFO file
+ msg "Generating .PKGINFO file..."
+--- etc/makepkg.conf.orig	2004-12-20 22:28:16.000000000 -0500
++++ etc/makepkg.conf	2004-12-20 22:29:34.000000000 -0500
+@@ -3,17 +3,17 @@
+ #
+ 
+ # The FTP/HTTP download utility that makepkg should use to acquire sources
+-export FTPAGENT="/usr/bin/wget --continue --passive-ftp --tries=3 --waitretry=3"
++export FTPAGENT="/usr/bin/wget --continue --passive-ftp"
+ #export FTPAGENT="/usr/bin/snarf"
+ #export FTPAGENT="/usr/bin/lftpget -c"
+ 
+-export CARCH="i686"
+-export CHOST="i686-pc-linux-gnu"
++export CARCH="i386"
++export CHOST="i386-pc-linux-gnu"
+ 
+ # Pentium Pro/Pentium II/Pentium III+/Pentium 4/Athlon exclusive (binaries
+ # will use the P6 instruction set and only run on P6+ systems)
+-export CFLAGS="-march=i686 -O2 -pipe"
+-export CXXFLAGS="-march=i686 -O2 -pipe"
++export CFLAGS="-march=i386 -O2 -pipe"
++export CXXFLAGS="-march=i386 -O2 -pipe"
+ # Pentium Pro/Pentium II/Pentium III+/Pentium 4/Athlon optimized (but binaries
+ # will run on any x86 system)
+ #export CFLAGS="-mcpu=i686 -O2 -pipe"

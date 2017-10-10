@@ -1,0 +1,29 @@
+# $Id: PKGBUILD,v 1.2 2005/03/17 23:35:05 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=findutils
+pkgname=findutils.uc
+pkgver=4.2.20
+pkgrel=1
+pkgdesc="GNU utilities to locate files"
+depends=('uclibc' 'bash.uc')
+url="http://www.gnu.org/software/findutils"
+groups=('base')
+source=(ftp://ftp.gnu.org/pub/gnu/findutils/findutils-$pkgver.tar.gz)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr
+  make || return 1
+  # believe it or not, the Makefile really wants to remove /usr/var, so
+  # we let it...
+  mkdir -p $startdir/pkg/usr/var
+  make DESTDIR=$startdir/pkg install
+  rm -rf $startdir/pkg/usr/libexec
+
+  # remove locate utils (we use slocate instead)
+  rm -f $startdir/pkg/usr/bin/{locate,updatedb}
+  rm -f $startdir/pkg/usr/man/man1/{updatedb.1,locate.1}
+  rm -f $startdir/pkg/usr/man/man5/locatedb.5
+  rmdir $startdir/pkg/usr/var
+}
+md5sums=('7c8e12165b221dd67a19c00d780437a4')

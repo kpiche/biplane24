@@ -1,0 +1,61 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:12:15 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=pacman
+pkgname=pacman.uc
+pkgver=2.9.5
+pkgrel=1
+pkgdesc="A .tar.gz based package manager with dependency support"
+url="http://www.archlinux.org/pacman"
+groups=('base')
+backup=('etc/pacman.conf' 'etc/makepkg.conf' 'etc/abs/abs.conf' \
+        etc/pacman.d/{current,release,extra,unstable})
+makedepends=('libtar.uc')
+depends=('zlib.uc')
+install=pacman.install
+source=(ftp://ftp.archlinux.org/other/pacman/$pkg-$pkgver.tar.gz \
+  http://www.archlinux.org/pacman/sortmirrors.pl \
+  supfile.arch supfile.extra supfile.unstable abs abs.conf \
+  current release extra unstable pacman.install makepkg.292.busybox.patch)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  
+  #  No install -D in busybox.
+  sed -e 's@(INSTALL) -D -m@(INSTALL) -m@' -i Makefile.in
+  #  Adjust makepkg for busybox.
+  patch -Np0 -i ../makepkg.292.busybox.patch
+        
+  ./configure --prefix=/usr
+  make || return 1
+  
+  #  make dirs first, since no install -D.
+  mkdir -p $startdir/pkg/usr/bin $startdir/pkg/etc/abs
+  mkdir -p $startdir/pkg/etc/pacman.d $startdir/pkg/usr/man/man8
+  
+  make DESTDIR=$startdir/pkg install
+  mkdir -p $startdir/pkg/var/abs/local
+  
+# UCLIBC: not relevant right now.
+#  install -m755 ../sortmirrors.pl $startdir/pkg/usr/bin/sortmirrors.pl
+#  install -m755 ../abs $startdir/pkg/usr/bin/abs
+#  install -m644 ../abs.conf $startdir/pkg/etc/abs/abs.conf
+#  for fn in supfile.{arch,extra,unstable}; do
+#    install -m644 ../$fn $startdir/pkg/etc/abs/$fn
+#  done
+#  for fn in current release extra unstable; do
+#    install -m644 ../$fn $startdir/pkg/etc/pacman.d/$fn
+#  done
+#  sed -i "s|i686|$CARCH|g" $startdir/pkg/etc/pacman.d/*
+
+  # UCLIBC: adjust conf for no repos.
+  sed -e '/^HoldPkg/ s/glibc/uclibc/' -e 's/^Include/#&/' \
+      -e 's/^\[current\]/#&/' -e 's/^\[extra\]/#&/' \
+      -i $startdir/pkg/etc/pacman.conf
+}
+md5sums=('db5f67177b8526b01fca97c475f750cc' '005d82a4832b5273450e556f30010414'\
+         '2c564a8760ec0dac96082f1855d153d1' 'f83885f6c431e4e7f8b131fe444ac0d2'\
+         '9a44663da93a07c8df42741ea0e41930' '0025f9f786d50201951fc7444207a089'\
+         '5dfcce0aa5e121936c002e555d6fb55e' '3d6287d2892d541168ec288bdeb66d81'\
+         '82a317a88a041729ca3887e1b3dcfa8c' '0fa3c4c249ff1f97c90977f86687bb40'\
+         '082c25bc59de91a366de4768babc01ad' 'a1f774f17cabac5b4cdc711875e1eb71'\
+         'cdee5a7a6bee5322279bd9b393f5da25')

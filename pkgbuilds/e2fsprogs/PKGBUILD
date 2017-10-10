@@ -1,0 +1,20 @@
+# $Id: PKGBUILD,v 1.2 2005/03/26 19:01:32 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=e2fsprogs
+pkgname=e2fsprogs.uc
+pkgver=1.37
+pkgrel=1
+pkgdesc="Ext2 filesystem utilities"
+url="http://e2fsprogs.sourceforge.net"
+groups=('minimal')
+depends=('uclibc' 'bash.uc')
+source=(http://dl.sourceforge.net/sourceforge/$pkg/$pkg-$pkgver.tar.gz)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --with-root-prefix="" \
+     --enable-elf-shlibs --disable-nls
+  make || return 1
+  make DESTDIR=$startdir/pkg install install-libs
+}
+md5sums=('084b49e919121fc0bf53c8dae23a71f8')

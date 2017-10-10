@@ -1,0 +1,28 @@
+# $Id: PKGBUILD,v 1.1 2005/03/18 04:09:25 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=coreutils
+pkgname=coreutils.uc
+pkgver=5.2.1
+pkgrel=5
+pkgdesc="A package to provide the sort and comm utilities"
+#pkgdesc="The basic file, shell and text manipulation utilities of the GNU operating system"
+url="http://www.gnu.org/software/coreutils"
+groups=('base')
+depends=('uclibc')
+source=(ftp://ftp.gnu.org/gnu/$pkg/$pkg-$pkgver.tar.gz \
+  coreutils-pam.patch coreutils-uname.patch su)
+md5sums=('83a485c9fa9e18903351d7b51bdc5719' '2768a535f3e86cee1a091b6553a9cfe4'\
+         '1945b60632ca54733c3bfa5456387eee' 'fa85e5cce5d723275b14365ba71a8aad')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  # fix for automake 1.9
+  sed -i 's|am__api_version="1.8"|am__api_version="1.9"|g' configure
+  ./configure --prefix=/usr
+  cd lib
+  make libfetish.a || return 1
+  cd ../src
+  make localedir.h sort comm
+  mkdir -p $startdir/pkg/usr/bin
+  cp comm sort $startdir/pkg/usr/bin
+}

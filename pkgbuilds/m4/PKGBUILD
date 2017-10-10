@@ -1,0 +1,18 @@
+# $Id: PKGBUILD,v 1.2 2005/04/05 02:13:28 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=m4
+pkgname=m4.uc
+pkgver=1.4.3
+pkgrel=1
+pkgdesc="m4 macro processor"
+url="http://www.gnu.org/software/m4"
+groups=('base')
+depends=('uclibc' 'bash.uc')
+source=(ftp://ftp.gnu.org/gnu/$pkg/$pkg-$pkgver.tar.gz)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr
+  make || return 1
+  make prefix=$startdir/pkg/usr install
+}

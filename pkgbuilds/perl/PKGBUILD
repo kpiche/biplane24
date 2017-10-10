@@ -1,0 +1,46 @@
+# $Id: PKGBUILD,v 1.3 2005/03/18 20:24:25 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=perl
+pkgname=perl.uc
+pkgver=5.8.6
+pkgrel=2
+pkgdesc="Practical Extraction and Report Language"
+url="http://www.perl.org"
+groups=('devel')
+makedepends=('findutils.uc' 'coreutils.uc')
+depends=('uclibc')
+source=(http://www.cpan.org/src/5.0/perl-$pkgver.tar.gz \
+  perl-5.8.1.patch perl586-uclibc.patch \
+  http://theoryx5.uwinnipeg.ca/cpan/authors/id/P/PM/PMQS/DB_File-1.807.tar.gz)
+install=perl.install
+md5sums=('8d4aa4e061fd5bc0c39e4f0a63267880' '5d2aae48a809c06660f4abd7f95dec43'\
+         'bc0df3665850311c9d618c50effde242' 'a60bbc5372e5d80517451ba5ac217066')
+
+build() {
+  # UCLIBC: building perl requires the full xargs and not busybox.
+  if [ -h /usr/bin/xargs ]; then
+      echo "Cannot use xargs from busybox, (re)install findutils.uc"
+      return 1
+  fi
+
+  cd $startdir/src/$pkg-$pkgver
+  patch -Np1 -i ../perl-5.8.1.patch || return 1
+  patch -Np0 -i ../perl586-uclibc.patch || return 1
+  # replace the old DB_File with the newest one from CPAN,
+  # since it supports sleepycat's db 4.1.x
+  cd ext
+  rm -rf DB_File
+  mv $startdir/src/DB_File-1.807 ./DB_File
+  cd $startdir/src/$pkg-$pkgver
+  ./Configure -des -Dprefix=/usr -Dinstallprefix=$startdir/pkg/usr \
+    -Dman1dir=/usr/man/man1 -Dman3dir=/usr/man/man3 -Doptimize="$CFLAGS" \
+    -Dusethreads
+  make || return 1
+  make install
+  (cd $startdir/pkg/usr/bin; mv perl$pkgver perl; ln -sf c2ph pstruct)
+  (cd $startdir/pkg/usr/bin; ln -sf s2p psed)
+  (cd $startdir/pkg/usr/lib/perl5; mv $pkgver current)
+  (cd $startdir/pkg/usr/lib/perl5/site_perl; mv $pkgver current)
+  find $startdir/pkg -type f | xargs grep -l "$startdir/pkg" | \
+    xargs -n1 perl -i -p -e "s|$startdir/pkg||g;"
+}

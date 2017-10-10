@@ -1,0 +1,54 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:16:50 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=bash
+pkgname=bash.uc
+pkgver=3.0
+pkgrel=6
+pkgdesc="The GNU Bourne Again shell"
+url="http://www.gnu.org/software/bash/bash.html"
+groups=('minimal')
+backup=(etc/profile)
+depends=('uclibc')
+source=(ftp://ftp.cwru.edu/pub/bash/bash-$pkgver.tar.gz \
+        ftp://ftp.cwru.edu/pub/bash/bash-3.0-patches/bash30-{001,002,003,004} \
+        ftp://ftp.cwru.edu/pub/bash/bash-3.0-patches/bash30-{005,006,007,008} \
+        ftp://ftp.cwru.edu/pub/bash/bash-3.0-patches/bash30-{009,010,011,012} \
+        ftp://ftp.cwru.edu/pub/bash/bash-3.0-patches/bash30-{013,014,015,016} \
+        bash-3.0-avoid_WCONTINUED-1.patch bash-noinfo.patch profile inputrc)
+md5sums=('26c4d642e29b3533d8d754995bc277b3' '24a83f78a44a6029024371f02da174dd'\
+         '6f4cf2aa975a1fcc0cb43a406bd47ca5' 'c8bf41e78cda16d391b9099eeba01386'\
+         'c069dffbb3f442aac3660b883ddd97f5' 'ad06309c623ff8e1b9f039d3b7eb97c2'\
+         'f162bf93a76759bab37b29509a4a6e20' '89903d92ca620921aecb3f1f30c05ebe'\
+         '9a295c02f46bc867fc096862c7380a88' '786c7e2af1dca5104af92bbdc60f7474'\
+         'f2d90d06ed445a285c8406016e9d9c13' '9506c56968c58332489986633319a186'\
+         '2753d4de0b57fc8890488463c5e86d3f' '5de5be8289764c11a3206b06351d81a6'\
+         'd4b531e02b6a0287cffdbf527134ca29' 'adc1ab952b42ed0c0f53d1c308a32101'\
+         'a3bb09a185e4c6a813227f3e84e4f6e5' '93eb380f4dd903ee25e47c7950894578'\
+         'f2a3cf51e58f9b82af50b861191d96fd' '6103ecdcec0fbb342dcea689fc9997c9'\
+         'a9bf51ee259858a8489b088cb4a106ca')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  for p in 001 002 003 004 005 006 007 008 \
+           009 010 011 012 013 014 015 016; do
+    patch -Np2 -i ../bash30-$p || return 1
+  done
+  patch -Np1 -i ../bash-3.0-avoid_WCONTINUED-1.patch || return 1
+  patch -Np1 -i ../bash-noinfo.patch || return 1
+  ./configure --prefix=/usr --disable-nls --without-bash-malloc
+#   --with-installed-readline --with-curses --enable-readline
+  make || return 1
+  make DESTDIR=$startdir/pkg install
+  mv $startdir/pkg/usr/bin $startdir/pkg/bin
+  # we don't want bashbug
+  rm -f $startdir/pkg/bin/bashbug
+  rm -f $startdir/pkg/usr/man/man1/bashbug.1
+  
+  # UCLIBC: no -D
+  mkdir -p $startdir/pkg/etc
+  install -m644 ../profile $startdir/pkg/etc/profile
+  # UCLIBC: Get infernal terminal bell to stop.
+  install -m644 ../inputrc $startdir/pkg/etc/inputrc
+  
+  ln -sf $pkg $startdir/pkg/bin/sh
+}

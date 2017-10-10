@@ -1,0 +1,52 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:16:50 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkgname=kernel24
+pkgver=2.4.29
+pkgrel=1
+pkgdesc="The Linux Kernel and modules (IDE support)"
+url="http://www.kernel.org"
+backup=('boot/kconfig')
+replaces=('kernel')
+conflicts=('kernel')
+install=kernel24.install
+source=(ftp://ftp.kernel.org/pub/linux/kernel/v2.4/linux-$pkgver.tar.bz2 \
+  config i386-gcc340.patch)
+md5sums=('fcf8b6bb620467f27b657c1c4a60bbff' 'f4653865820f1463fbb3fe405ff5ec1b')
+
+build() {
+  if [ -h /usr/bin/find -o -h /usr/bin/xargs ]; then
+	echo "Cannot use find and xargs from busybox, (re)install findutils.uc"
+	return 1
+  fi
+
+  cd $startdir/src/linux-$pkgver
+  
+  # UCLIBC: patch for i386
+  patch -Np0 -i ../i386-gcc340.patch
+  
+  # get rid of the 'i' in i686
+  carch=`echo $CARCH | sed 's|i||'`
+  cat ../config | sed "s|#CARCH#|$carch|g" >./.config
+  yes "" | make config
+  make dep clean bzImage modules || return 1
+  mkdir -p $startdir/pkg/{lib/modules,boot}
+  make INSTALL_MOD_PATH=$startdir/pkg modules_install || return 1
+  cp System.map $startdir/pkg/boot
+  cp arch/i386/boot/bzImage $startdir/pkg/boot/vmlinuz
+  mkdir -p $startdir/pkg/usr/src/linux-$pkgver/include
+  mkdir -p $startdir/pkg/usr/src/linux-$pkgver/arch/i386
+  cp arch/i386/Makefile $startdir/pkg/usr/src/linux-$pkgver/arch/i386/
+  for i in acpi asm-generic asm-i386 config linux math-emu net pcmcia scsi video; do
+    cp -a include/$i $startdir/pkg/usr/src/linux-$pkgver/include/
+  done
+  cp Rules.make Makefile $startdir/pkg/usr/src/linux-$pkgver/
+  cd $startdir/pkg/usr/src/linux-$pkgver/include && ln -s asm-i386 asm
+  chown -R root.root $startdir/pkg/usr/src/linux-$pkgver
+  cd $startdir/pkg/lib/modules/$pkgver && \
+    (rm -f build; ln -sf /usr/src/linux-$pkgver build)
+  # cd $startdir && ./mkinitrd -k "$pkgver" -o image
+  cd $startdir/src/linux-$pkgver
+  # UCLIBC: no -D
+  install -m644 .config $startdir/pkg/usr/src/linux-$pkgver/.config
+  install -m644 .config $startdir/pkg/boot/kconfig
+}

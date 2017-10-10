@@ -1,0 +1,48 @@
+# $Id: PKGBUILD,v 1.4 2005/03/20 07:41:05 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=gcc
+pkgname=gcc.uc
+pkgver=3.4.3
+pkgrel=2
+pkgdesc="The GNU Compiler Collection"
+url="http://gcc.gnu.org"
+groups=('devel')
+depends=('binutils.uc')
+source=(ftp://gcc.gnu.org/pub/gcc/releases/gcc-$pkgver/$pkg-{core,g++,testsuite}-$pkgver.tar.bz2 \
+	gcc-3.4.1-VisibilityPatch2.diff)
+
+build() {
+  # now build the new (current) version
+  cd $startdir/src/gcc-$pkgver
+  
+  # Do NOT run fixincludes
+  sed -ie "\@\./fixinc\.sh@ d" gcc/Makefile.in
+      
+  # Adjust config entries from which spec file will be generated
+  for i in `find gcc/config -name "*.h"`
+  do
+    sed -r -e 's /lib(64)?/ld(64)?(-linux)?(-x86-)?(-ia)?(64)?.so.[12] /lib/ld-uClibc.so.0 ' -i "$i"
+    if [ $? -ne 0 ]; then exit 1; fi
+  done
+                      
+  patch -Np1 -i $startdir/src/gcc-3.4.1-VisibilityPatch2.diff || return 1
+  mkdir ../gcc-build
+  cd ../gcc-build
+  ../gcc-$pkgver/configure --prefix=/usr --disable-shared \
+     --enable-languages=c --enable-threads=posix --enable-__cxa_atexit \
+     --disable-nls i386-pc-linux-gnu
+  make bootstrap || return 1
+  make DESTDIR=$startdir/pkg install || return 1
+  rm -rf $startdir/pkg/usr/bin/c++filt $startdir/pkg/usr/lib/libiberty.a
+  mkdir -p $startdir/pkg/lib
+  (cd $startdir/pkg/lib; ln -s ../usr/bin/cpp)
+  (cd $startdir/pkg/usr/bin; ln -sf gcc cc)
+  
+  # UCLIBC: not building C++
+  #(cd $startdir/pkg/usr/bin; ln -sf gcc cc; ln -sf g++ c++)
+  # get rid of the references to my build dir
+  #sed -i "s|-L$startdir/src[^ ]* ||g" $startdir/pkg/usr/lib/{libstdc++.la,libsupc++.la}
+  #chmod 644 $startdir/pkg/usr/lib/*.la
+}
+md5sums=('d2cbfe8fc3205c1d7969b26377405778' '26cb84db92feb8e03bb7bf3bc264844f'\
+         'b4fff6ce0a038021b9e507917abb9a07' 'd2b2e7d8e2eb265ce445e4e916d83708')

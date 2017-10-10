@@ -1,0 +1,20 @@
+# $Id: PKGBUILD,v 1.1.1.1 2005/02/28 22:12:15 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=binutils
+pkgname=binutils.uc
+pkgver=2.15
+pkgrel=1
+pkgdesc="A set of programs to assemble and manipulate binary and object files"
+url="http://sources.redhat.com/binutils"
+groups=('base')
+depends=('uclibc')
+makedepends=('flex.uc')
+source=(ftp://ftp.gnu.org/pub/gnu/$pkgname/$pkg-$pkgver.tar.bz2)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr --enable-shared --disable-nls
+  make tooldir=$startdir/pkg/usr || return 1
+  make prefix=$startdir/pkg/usr tooldir=$startdir/pkg/usr install
+}
+md5sums=('624e6b74983ac6b2960edaf2d522ca58')

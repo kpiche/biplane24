@@ -1,0 +1,20 @@
+# $Id: PKGBUILD,v 1.2 2005/03/08 08:53:51 root Exp $
+# Maintainer: dorphell <dorphell@archlinux.org>
+# Committer: Judd Vinet <jvinet@zeroflux.org>
+pkg=nasm
+pkgname=nasm.uc
+pkgver=0.98.39
+pkgrel=1
+pkgdesc="80x86 assembler designed for portability and modularity"
+depends=('uclibc')
+groups=('devel')
+source=(http://dl.sourceforge.net/sourceforge/nasm/nasm-$pkgver.tar.bz2)
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+  ./configure --prefix=/usr
+  make || return 1
+  mkdir -p $startdir/pkg/usr/{bin,man/man1}
+  make prefix=$startdir/pkg/usr install
+}
+md5sums=('2032ad44c7359f7a9a166a40a633e772')

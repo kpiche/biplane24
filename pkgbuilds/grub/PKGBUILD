@@ -1,0 +1,30 @@
+# $Id: PKGBUILD,v 1.2 2005/03/08 08:33:34 root Exp $
+# Maintainer: judd <jvinet@zeroflux.org>
+pkg=grub
+pkgname=grub.uc
+pkgver=0.96
+pkgrel=2
+pkgdesc="A GNU multiboot boot loader"
+url="http://www.gnu.org/software/grub/"
+groups=('minimal')
+depends=('uclibc')
+source=(ftp://alpha.gnu.org/gnu/grub/grub-$pkgver.tar.gz \
+  menu.lst install-grub)
+backup=('boot/grub/menu.lst')
+md5sums=('47c228c88f848873288ad1cd04cc93f0' '3f0e8e1615769b3368b5ae2dbfbb986b'\
+         '8c9cdb9b38cb158f762cac8fc7eabb28')
+
+build() {
+  cd $startdir/src/$pkg-$pkgver
+# optimizations break the build -- disable them
+  CFLAGS= ./configure --prefix=/usr --bindir=/bin \
+      --sbindir=/sbin --without-curses
+  CFLAGS= make || return 1
+  make DESTDIR=$startdir/pkg install
+  mkdir -p $startdir/pkg/boot/grub
+  install -m644 ../menu.lst $startdir/pkg/boot/grub/menu.lst
+  install -m755 ../install-grub $startdir/pkg/sbin/install-grub
+  # symlink for compatibility with the <=0.7 installer
+  mkdir -p $startdir/pkg/usr/share
+  ln -s ../lib/grub $startdir/pkg/usr/share/grub
+}
